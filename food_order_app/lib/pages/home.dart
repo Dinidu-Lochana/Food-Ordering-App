@@ -29,7 +29,12 @@ class _HomeState extends State<Home> {
           ),
           SizedBox(height: 25.0,),
           Text("Choose the Best", style: AppWidget.headLineTextFieldStyle()),
-          Text("Discover and get Great Food", style: AppWidget.LightTextFieldStyle())
+          Text("Discover and get Great Food", style: AppWidget.LightTextFieldStyle()),
+          Row(children: [
+            Container(
+              child: Image.asset("images/pngwing.com (2).png",height: 40,width: 40, fit: BoxFit.cover,),
+            )
+          ],)
       ],
       ),)
     );
