@@ -82,8 +82,7 @@ class _SignUpPageState extends State<SignUpPage> {
                       fillColor: Colors.white,
                     ),
                     onChanged: (value) => name = value,
-                    validator: (value) =>
-                        value!.isEmpty ? "Enter your name" : null,
+                    validator: (value) => value!.isEmpty ? "Enter your name" : null,
                   ),
                   SizedBox(height: 15),
                   // Email Field
@@ -115,8 +114,7 @@ class _SignUpPageState extends State<SignUpPage> {
                     ),
                     keyboardType: TextInputType.phone,
                     onChanged: (value) => contactNumber = value,
-                    validator: (value) =>
-                        value!.isEmpty ? "Enter your contact number" : null,
+                    validator: (value) => value!.isEmpty ? "Enter your contact number" : null,
                   ),
                   SizedBox(height: 15),
                   // Password Field
@@ -141,13 +139,30 @@ class _SignUpPageState extends State<SignUpPage> {
                     onPressed: signUpUser,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.brown,
-                      padding:
-                          EdgeInsets.symmetric(vertical: 15, horizontal: 50),
+                      padding: EdgeInsets.symmetric(vertical: 15, horizontal: 50),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30.0),
                       ),
                     ),
                     child: Text('Sign Up', style: TextStyle(fontSize: 16)),
+                  ),
+                  SizedBox(height: 20),
+                  // Login Link
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => LoginPage()),
+                      );
+                    },
+                    child: Text(
+                      "Already have an account? Login",
+                      style: TextStyle(
+                        color: const Color.fromARGB(255, 241, 135, 77),
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ],
               ),
