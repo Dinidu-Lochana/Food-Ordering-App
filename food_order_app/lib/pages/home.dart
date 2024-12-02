@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:food_order_app/widget/widget_support.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import '../pages/auth_pages/login.dart'; // Import your login page here
+import 'FoodDetails.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -9,175 +12,136 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-
-  bool rice = false, burger = false, beverages = false, dessert = false;
-
-  // Example food data for each category
-  List<String> riceItems = ["Fried Rice", "Chicken Rice", "Veg Rice"];
-  List<String> burgerItems = ["Cheese Burger", "Veg Burger", "Chicken Burger"];
-  List<String> beverageItems = ["Coke", "Juice", "Water"];
-  List<String> dessertItems = ["Cake", "Ice Cream", "Brownie"];
-
-  List<String> displayedItems = [];
+  String selectedCategory = ''; // Track the selected category
+  List foodItems = [];
+  List displayedItems = [];
 
   @override
   void initState() {
     super.initState();
-    displayedItems = riceItems; // Initially, show rice items
+    fetchFoodItems();
+  }
+
+  Future<void> fetchFoodItems() async {
+    try {
+      final response = await http.get(Uri.parse('http://192.168.1.100:5000/api/food/getFoodItems'));
+
+      if (response.statusCode == 200) {
+        final List fetchedItems = json.decode(response.body);
+        setState(() {
+          foodItems = fetchedItems;
+          displayedItems = fetchedItems;
+        });
+      } else {
+        throw Exception('Failed to load food items');
+      }
+    } catch (error) {
+      print('Error fetching food items: $error');
+    }
+  }
+
+  void filterItems(String category) {
+    setState(() {
+      selectedCategory = category; // Update the selected category
+      displayedItems = foodItems.where((item) {
+        return item['type'].toLowerCase() == category.toLowerCase();
+      }).toList();
+    });
+  }
+
+  void logout() {
+    // Clear session data, if any
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => LoginPage()),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text("UrbanFood"),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.logout),
+            onPressed: logout,
+            tooltip: 'Logout',
+          ),
+        ],
+      ),
       body: Container(
-        margin: EdgeInsets.only(top: 55, left: 15, right: 10),
+        margin: EdgeInsets.only(top: 20, left: 15, right: 10),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text("WELCOME TO URBANFOOD,", style: AppWidget.boldTextFieldStyle()),
-                Container(
-                  padding: EdgeInsets.all(3),
-                  decoration: BoxDecoration(
-                      color: Colors.black, borderRadius: BorderRadius.circular(10)),
-                  child: Icon(
-                    Icons.shopping_cart_outlined,
-                    color: Colors.white,
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 25.0),
-            Text("Choose the Best", style: AppWidget.headLineTextFieldStyle()),
-            Text("Discover and get Great Food", style: AppWidget.LightTextFieldStyle()),
+            Text("WELCOME TO URBANFOOD,", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            SizedBox(height: 10.0),
+            Text("Choose the Best", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+            Text("Discover and get Great Food", style: TextStyle(fontSize: 14, color: Colors.grey)),
             SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Rice Button
-                GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      rice = true;
-                      burger = false;
-                      beverages = false;
-                      dessert = false;
-                      displayedItems = riceItems; // Show rice items
-                    });
-                  },
-                  child: Material(
-                    elevation: 5.0,
-                    borderRadius: BorderRadius.circular(10),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: rice ? Colors.black : Colors.white,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      padding: EdgeInsets.all(10),
-                      child: Image.asset(
-                        "images/pngwing.com (2).png",
-                        height: 50,
-                        width: 50,
-                        fit: BoxFit.cover,
-                        color: rice ? Colors.white : Colors.black,
-                      ),
-                    ),
-                  ),
-                ),
-                // Burger Button
-                GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      rice = false;
-                      burger = true;
-                      beverages = false;
-                      dessert = false;
-                      displayedItems = burgerItems; // Show burger items
-                    });
-                  },
-                  child: Material(
-                    elevation: 5.0,
-                    borderRadius: BorderRadius.circular(10),
-                    child: Container(
-                      padding: EdgeInsets.all(10),
-                      child: Image.asset(
-                        "images/burger-logo-icon_567288-500-removebg-preview.png",
-                        height: 60,
-                        width: 60,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                ),
-                // Beverages Button
-                GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      rice = false;
-                      burger = false;
-                      beverages = true;
-                      dessert = false;
-                      displayedItems = beverageItems; // Show beverage items
-                    });
-                  },
-                  child: Material(
-                    elevation: 5.0,
-                    borderRadius: BorderRadius.circular(10),
-                    child: Container(
-                      padding: EdgeInsets.all(10),
-                      child: Image.asset(
-                        "images/pngegg (7).png",
-                        height: 50,
-                        width: 50,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                ),
-                // Desserts Button
-                GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      rice = false;
-                      burger = false;
-                      beverages = false;
-                      dessert = true;
-                      displayedItems = dessertItems; // Show dessert items
-                    });
-                  },
-                  child: Material(
-                    elevation: 5.0,
-                    borderRadius: BorderRadius.circular(10),
-                    child: Container(
-                      padding: EdgeInsets.all(10),
-                      child: Image.asset(
-                        "images/pngwing.com (3).png",
-                        height: 50,
-                        width: 50,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                ),
+                buildCategoryButton('rice', "images/pngwing.com (2).png"),
+                buildCategoryButton('burger', "images/burger-logo-icon_567288-500-removebg-preview.png"),
+                buildCategoryButton('beverages', "images/pngegg (7).png"),
+                buildCategoryButton('dessert', "images/pngwing.com (3).png"),
               ],
             ),
             SizedBox(height: 20),
-            // Display filtered items based on selected category
             Expanded(
               child: ListView.builder(
                 itemCount: displayedItems.length,
                 itemBuilder: (context, index) {
-                  return Card(
-                    child: ListTile(
-                      title: Text(displayedItems[index]),
+                  final item = displayedItems[index];
+                  return GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => FoodDetails(item: {
+                            ...item,
+                            'amount': (item['amount'] as num).toDouble(),
+                          }),
+                        ),
+                      );
+                    },
+                    child: Card(
+                      child: ListTile(
+                        leading: Image.network(item['imageUrl'], height: 50, width: 50),
+                        title: Text(item['name']),
+                        subtitle: Text(item['description']),
+                        trailing: Text("\$${item['amount']}", style: TextStyle(fontSize: 12, color: Colors.grey)),
+                      ),
                     ),
                   );
                 },
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget buildCategoryButton(String category, String imagePath) {
+    final isSelected = selectedCategory == category;
+    return GestureDetector(
+      onTap: () => filterItems(category),
+      child: Material(
+        elevation: isSelected ? 10.0 : 5.0,
+        borderRadius: BorderRadius.circular(10),
+        color: isSelected ? Colors.orange : Colors.white, // Change color if selected
+        child: Container(
+          padding: EdgeInsets.all(10),
+          child: Image.asset(
+            imagePath,
+            height: 50,
+            width: 50,
+            fit: BoxFit.cover,
+            color: isSelected ? Colors.white : Colors.black, // Change icon color if selected
+          ),
         ),
       ),
     );
