@@ -3,6 +3,9 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../pages/auth_pages/login.dart'; // Import your login page here
 import 'FoodDetails.dart';
+import 'CartPage.dart'; // Import your Cart page here
+import 'package:firebase_auth/firebase_auth.dart';
+
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -15,13 +18,24 @@ class _HomeState extends State<Home> {
   String selectedCategory = ''; // Track the selected category
   List foodItems = [];
   List displayedItems = [];
+  List cartItems = []; // List to track items in the cart
+  late String userId;
 
   @override
   void initState() {
     super.initState();
     fetchFoodItems();
+    getUserId();
   }
 
+void getUserId() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      setState(() {
+        userId = user.uid; // Store user ID
+      });
+    }
+  }
   Future<void> fetchFoodItems() async {
     try {
       final response = await http.get(Uri.parse('http://192.168.8.170:5000/api/food/getFoodItems'));
@@ -57,12 +71,28 @@ class _HomeState extends State<Home> {
     );
   }
 
+  void addToCart(Map item) {
+    setState(() {
+      cartItems.add(item); // Add selected item to the cart
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text("UrbanFood"),
         actions: [
+          IconButton(
+            icon: Icon(Icons.shopping_cart),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => CartPage()),
+              );
+            },
+            tooltip: 'View Cart',
+          ),
           IconButton(
             icon: Icon(Icons.logout),
             onPressed: logout,
@@ -112,7 +142,14 @@ class _HomeState extends State<Home> {
                         leading: Image.network(item['imageUrl'], height: 50, width: 50),
                         title: Text(item['name']),
                         subtitle: Text(item['description']),
-                        trailing: Text("\$${item['amount']}", style: TextStyle(fontSize: 12, color: Colors.grey)),
+                        trailing: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text("\$${item['amount']}", style: TextStyle(fontSize: 12, color: Colors.grey)),
+                            SizedBox(height: 5),
+                            
+                          ],
+                        ),
                       ),
                     ),
                   );

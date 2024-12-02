@@ -3,12 +3,14 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 const cors = require('cors');
 const foodRoutes = require('./routes/foodRoutes');
+const cartRoutes = require('./routes/cartRoutes');
 
 // Initialize the app
 const app = express();
 app.use(cors());
 app.use(express.json());  // Parse JSON bodies
 app.use('/api/food', foodRoutes);
+app.use('/api/cart', cartRoutes);
 
 // Serve static files (like images)
 app.use('/uploads', express.static('uploads'));
