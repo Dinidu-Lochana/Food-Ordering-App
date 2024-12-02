@@ -24,7 +24,7 @@ class _HomeState extends State<Home> {
 
   Future<void> fetchFoodItems() async {
     try {
-      final response = await http.get(Uri.parse('http://192.168.1.100:5000/api/food/getFoodItems'));
+      final response = await http.get(Uri.parse('http://192.168.8.170:5000/api/food/getFoodItems'));
 
       if (response.statusCode == 200) {
         final List fetchedItems = json.decode(response.body);

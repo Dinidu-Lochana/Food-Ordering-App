@@ -47,7 +47,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
       _isLoading = true;
     });
 
-    var uri = Uri.parse('http://192.168.1.100:5000/api/food/addFoodItem');  // Update with the correct server address
+    var uri = Uri.parse('http://192.168.8.170:5000/api/food/addFoodItem');  // Update with the correct server address
     var request = http.MultipartRequest('POST', uri)
       ..fields['name'] = _nameController.text
       ..fields['type'] = _foodType

@@ -30,7 +30,7 @@ router.post('/addFoodItem', upload.single('image'), async (req, res) => {
   console.log(req.file);  // Log uploaded file info
 
   const { name, type, description, amount } = req.body;
-  const imageUrl = req.file ? `http://192.168.1.100:5000/uploads/${req.file.filename}` : null;
+  const imageUrl = req.file ? `http://192.168.8.170:5000/uploads/${req.file.filename}` : null;
 
   if (!name || !type || !description || !amount || !imageUrl) {
     return res.status(400).json({ message: 'All fields are required, including the image.' });
