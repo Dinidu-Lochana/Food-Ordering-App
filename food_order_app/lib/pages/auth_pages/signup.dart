@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'login.dart';
 
 class SignUpPage extends StatefulWidget {
@@ -10,36 +11,46 @@ class SignUpPage extends StatefulWidget {
 
 class _SignUpPageState extends State<SignUpPage> {
   final _formKey = GlobalKey<FormState>();
-  final _auth = FirebaseAuth.instance;
 
   String name = '';
   String email = '';
   String contactNumber = '';
   String password = '';
 
-  void signUpUser() async {
-    if (_formKey.currentState!.validate()) {
-      try {
-        await _auth.createUserWithEmailAndPassword(
-          email: email,
-          password: password,
-        );
-        Fluttertoast.showToast(
-          msg: "Sign-Up Successful",
-          backgroundColor: Colors.green,
-          textColor: Colors.white,
-        );
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => LoginPage()),
-        );
-      } catch (e) {
-        Fluttertoast.showToast(
-          msg: e.toString(),
-          backgroundColor: Colors.red,
-          textColor: Colors.white,
-        );
-      }
+  // Sign-Up function
+  void signUpUser(String name, String email, String contactNumber, String password, BuildContext context) async {
+    try {
+      // Create user in Firebase Authentication
+      UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      // Add user details to Firestore
+      await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({
+        'name': name,
+        'email': email,
+        'contactNumber': contactNumber,
+        'role': 'customer', // Default role
+      });
+
+      Fluttertoast.showToast(
+        msg: "Sign-Up Successful!",
+        backgroundColor: Colors.green,
+        textColor: Colors.white,
+      );
+
+      // Redirect to Login page
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => LoginPage()),
+      );
+    } catch (e) {
+      Fluttertoast.showToast(
+        msg: e.toString(),
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+      );
     }
   }
 
@@ -58,7 +69,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 children: [
                   // Logo Section
                   Image.asset(
-                    'assets/logo.png', // Correct logo path
+                    'assets/logo.png', // Ensure the logo path is correct
                     height: 100,
                   ),
                   SizedBox(height: 20),
@@ -82,7 +93,8 @@ class _SignUpPageState extends State<SignUpPage> {
                       fillColor: Colors.white,
                     ),
                     onChanged: (value) => name = value,
-                    validator: (value) => value!.isEmpty ? "Enter your name" : null,
+                    validator: (value) =>
+                        value!.isEmpty ? "Enter your name" : null,
                   ),
                   SizedBox(height: 15),
                   // Email Field
@@ -114,7 +126,9 @@ class _SignUpPageState extends State<SignUpPage> {
                     ),
                     keyboardType: TextInputType.phone,
                     onChanged: (value) => contactNumber = value,
-                    validator: (value) => value!.isEmpty ? "Enter your contact number" : null,
+                    validator: (value) => value!.isEmpty || value.length < 10
+                        ? "Enter a valid contact number"
+                        : null,
                   ),
                   SizedBox(height: 15),
                   // Password Field
@@ -134,12 +148,17 @@ class _SignUpPageState extends State<SignUpPage> {
                         : null,
                   ),
                   SizedBox(height: 20),
-                  // Sign Up Button
+                  // Sign-Up Button
                   ElevatedButton(
-                    onPressed: signUpUser,
+                    onPressed: () {
+                      if (_formKey.currentState!.validate()) {
+                        signUpUser(name, email, contactNumber, password, context);
+                      }
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.brown,
-                      padding: EdgeInsets.symmetric(vertical: 15, horizontal: 50),
+                      padding:
+                          EdgeInsets.symmetric(vertical: 15, horizontal: 50),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30.0),
                       ),
@@ -147,7 +166,7 @@ class _SignUpPageState extends State<SignUpPage> {
                     child: Text('Sign Up', style: TextStyle(fontSize: 16)),
                   ),
                   SizedBox(height: 20),
-                  // Login Link
+                  // Already have an account? Login Link
                   GestureDetector(
                     onTap: () {
                       Navigator.push(
@@ -158,7 +177,7 @@ class _SignUpPageState extends State<SignUpPage> {
                     child: Text(
                       "Already have an account? Login",
                       style: TextStyle(
-                        color: const Color.fromARGB(255, 241, 135, 77),
+                        color: Color.fromARGB(255, 241, 135, 77),
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
