@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'signup.dart';
-import '../home.dart'; // Adjust this import if the Home page is elsewhere.
+import '../admindashboard.dart';
+import '../home.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -11,36 +13,63 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
-  final _auth = FirebaseAuth.instance;
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
 
-  String email = '';
-  String password = '';
+  void loginUser(String email, String password, BuildContext context) async {
+    try {
+      // Sign in user
+      UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
 
-  void loginUser() async {
-    if (_formKey.currentState!.validate()) {
-      try {
-        await _auth.signInWithEmailAndPassword(
-          email: email,
-          password: password,
-        );
+      // Fetch user role from Firestore
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userCredential.user!.uid)
+          .get();
+
+      if (userDoc.exists) {
+        String role = userDoc['role'];
+
         Fluttertoast.showToast(
-          msg: "Login Successful",
+          msg: "Login Successful!",
           backgroundColor: Colors.green,
           textColor: Colors.white,
         );
 
-        // Navigate to home screen
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => Home()),
-        );
-      } catch (e) {
+        // Redirect based on role
+        if (role == 'admin') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => AdminDashboard()),
+          );
+        } else if (role == 'customer') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => Home()),
+          );
+        } else {
+          Fluttertoast.showToast(
+            msg: "Unknown Role!",
+            backgroundColor: Colors.orange,
+            textColor: Colors.white,
+          );
+        }
+      } else {
         Fluttertoast.showToast(
-          msg: e.toString(),
+          msg: "User not found in database!",
           backgroundColor: Colors.red,
           textColor: Colors.white,
         );
       }
+    } catch (e) {
+      Fluttertoast.showToast(
+        msg: e.toString(),
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+      );
     }
   }
 
@@ -74,6 +103,7 @@ class _LoginPageState extends State<LoginPage> {
                   SizedBox(height: 20),
                   // Email Field
                   TextFormField(
+                    controller: emailController,
                     decoration: InputDecoration(
                       labelText: 'Email',
                       border: OutlineInputBorder(
@@ -83,7 +113,6 @@ class _LoginPageState extends State<LoginPage> {
                       fillColor: Colors.white,
                     ),
                     keyboardType: TextInputType.emailAddress,
-                    onChanged: (value) => email = value,
                     validator: (value) => value!.isEmpty || !value.contains('@')
                         ? "Enter a valid email"
                         : null,
@@ -91,6 +120,7 @@ class _LoginPageState extends State<LoginPage> {
                   SizedBox(height: 15),
                   // Password Field
                   TextFormField(
+                    controller: passwordController,
                     decoration: InputDecoration(
                       labelText: 'Password',
                       border: OutlineInputBorder(
@@ -100,7 +130,6 @@ class _LoginPageState extends State<LoginPage> {
                       fillColor: Colors.white,
                     ),
                     obscureText: true,
-                    onChanged: (value) => password = value,
                     validator: (value) => value!.length < 6
                         ? "Password must be at least 6 characters"
                         : null,
@@ -108,7 +137,11 @@ class _LoginPageState extends State<LoginPage> {
                   SizedBox(height: 20),
                   // Login Button
                   ElevatedButton(
-                    onPressed: loginUser,
+                    onPressed: () {
+                      if (_formKey.currentState!.validate()) {
+                        loginUser(emailController.text, passwordController.text, context);
+                      }
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.brown,
                       padding:
